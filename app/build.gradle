@@ -1,0 +1,30 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.alaamohammed.xraymirror'
+    compileSdk 35
+    // AGP 8.7 defaults to build-tools 34.0.0, but the CI installs 35.0.0 only.
+    buildToolsVersion '35.0.0'
+
+    defaultConfig {
+        applicationId 'com.alaamohammed.xraymirror'
+        minSdk 23
+        targetSdk 35
+        versionCode 2
+        versionName '1.1.0'
+    }
+
+    // Keep the large model/WASM files uncompressed so they stream straight from the APK.
+    androidResources {
+        noCompress 'task', 'wasm'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}

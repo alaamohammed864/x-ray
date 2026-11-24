@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071522">
+<title>مرآة الأشعة السينية | X-Ray Mirror</title>
+
+<style>
+:root{--bg:#071522;--panel:#102637;--panel2:#173449;--line:#29485b;--mint:#b8f36b;--cyan:#71e7f5;--text:#eff8fb;--muted:#9db5c2}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#18394b 0,#071522 58%);color:var(--text);font-family:'Noto Naskh Arabic',Tahoma,Arial,sans-serif}
+header{padding:15px clamp(14px,3vw,34px);display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #254154;background:#071522d9;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:39px;height:39px;border-radius:12px;background:linear-gradient(135deg,var(--mint),#5fc9d9);display:grid;place-items:center;color:#09202b;font-size:22px;font-weight:800}.brand h1{font-size:18px;margin:0;font-weight:800}.brand small{display:block;color:var(--muted);font-size:11px;direction:ltr;text-align:right}
+.status{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:7px 11px;border-radius:30px;white-space:nowrap}.status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#758994;margin-left:6px}.status.live i{background:#8fe66d;box-shadow:0 0 10px #8fe66d}
+main{max-width:1450px;margin:auto;padding:18px clamp(12px,2.5vw,30px) 35px}.intro{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px}.intro h2{font-size:clamp(20px,3vw,29px);margin:0 0 3px}.intro p{margin:0;color:var(--muted);font-size:13px}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:15px;align-items:start}.stage-wrap{min-width:0}.stage{position:relative;width:100%;aspect-ratio:16/9;min-height:260px;max-height:75vh;background:#02080d;border:1px solid #31546a;border-radius:18px;overflow:hidden;box-shadow:0 18px 60px #0008}
+#view{width:100%;height:100%;display:block;object-fit:cover}.stage:after{content:"";position:absolute;inset:0;border:1px solid #ffffff12;border-radius:18px;pointer-events:none}
+.stage-top{position:absolute;z-index:2;top:12px;right:12px;left:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}.chip{background:#061521c9;border:1px solid #9ab6c533;color:#d8e9ef;padding:6px 10px;border-radius:30px;font-size:11px;backdrop-filter:blur(8px)}
+.stage-bottom{position:absolute;bottom:10px;right:12px;left:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}.disclaimer{font-size:10px;color:#d6e5eb;background:#061521b8;padding:5px 9px;border-radius:20px}
+.overlay{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(135deg,#061521f2,#102c3df2);padding:20px}.overlay h3{font-size:24px;margin:0 0 7px}.overlay p{max-width:430px;color:#b5cbd5;font-size:13px;line-height:1.8;margin:0 0 17px}.primary{border:0;border-radius:12px;padding:12px 25px;background:var(--mint);color:#10202a;font:800 15px Tahoma,'Noto Naskh Arabic',Arial,sans-serif;cursor:pointer;box-shadow:0 5px 24px #b8f36b25}.primary:disabled{opacity:.55;cursor:wait}
+#message{font-size:12px;color:#ffd28a;margin-top:12px;max-width:500px}
+.fact{position:absolute;z-index:4;bottom:48px;right:14px;max-width:230px;background:#071722e8;border:1px solid #8de5ef77;border-radius:12px;padding:10px 12px;display:none;box-shadow:0 8px 30px #0008}.fact strong{display:block;color:var(--mint);font-size:14px}.fact span{font-size:11px;color:#d5e4ea;line-height:1.5}
+.panel{background:linear-gradient(160deg,#112b3d,#0b1d2a);border:1px solid var(--line);border-radius:17px;padding:14px;max-height:calc(100vh - 105px);overflow:auto;scrollbar-color:#36566a transparent;scrollbar-width:thin}
+.panel h3{font-size:16px;margin:0 0 12px}.group{padding:11px 0;border-top:1px solid #294456}.group:first-of-type{border-top:0;padding-top:0}.group-title{font-size:12px;color:var(--cyan);font-weight:800;margin-bottom:9px}
+.toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:#d9e7ed;background:#142f41;padding:7px 8px;border-radius:9px;min-height:34px}.toggle input{accent-color:var(--mint);width:15px;height:15px}
+select,button.secondary{font:600 12px Tahoma,'Noto Naskh Arabic',Arial,sans-serif;color:var(--text);background:#173448;border:1px solid #36576a;border-radius:9px;padding:8px 10px}
+select{width:100%;margin-bottom:7px}.range{margin:10px 0}.range-head{display:flex;justify-content:space-between;font-size:12px;color:#d9e7ed;margin-bottom:5px}.range output{color:var(--mint);direction:ltr}input[type=range]{width:100%;accent-color:var(--mint)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.secondary{cursor:pointer}.secondary:hover{border-color:var(--mint)}
+.note{color:#8faab8;font-size:10px;line-height:1.7;margin:10px 0 0}
+.footer{margin-top:14px;color:#8099a7;font-size:11px;line-height:1.8;text-align:center}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}.panel{max-height:none;display:grid;grid-template-columns:1fr 1fr;gap:0 15px}.panel>h3{grid-column:1/-1}.group{min-width:0}.stage{max-height:none}}
+@media(max-width:560px){header{padding:10px 12px}.brand h1{font-size:15px}.status{font-size:10px;padding:6px 8px}main{padding:12px 9px 25px}.intro{align-items:start;flex-direction:column}.stage{aspect-ratio:9/13;min-height:420px;border-radius:13px}.panel{display:block;padding:12px}.toggle-grid{grid-template-columns:1fr 1fr}.stage-top{top:8px;right:8px;left:8px}.chip{font-size:9px;padding:5px 7px}.disclaimer{font-size:9px}}
+.toast{position:absolute;z-index:6;bottom:46px;left:50%;transform:translateX(-50%);background:#071722f0;border:1px solid #8de5ef77;color:#eaf7fb;padding:8px 14px;border-radius:20px;font-size:12px;display:none;max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="logo">✧</div><div><h1>مرآة الأشعة السينية</h1><small>X-RAY ANATOMY MIRROR</small></div></div>
+ <div class="status" id="status"><i></i><span id="statusText">بانتظار تشغيل الكاميرا</span></div>
+</header>
+<main>
+ <div class="intro"><div><h2>اكتشف التشريح بطريقة تفاعلية</h2><p>نموذج تشريحي تعليمي يتتبع ملامح الوجه واليدين في الوقت الحقيقي.</p></div></div>
+ <div class="workspace">
+  <section class="stage-wrap">
+   <div class="stage" id="stage">
+    <canvas id="view"></canvas>
+    <div class="stage-top"><span class="chip" id="tracking">الوجه: — | اليدان: —</span><span class="chip" id="fps">0 FPS</span></div>
+    <div class="stage-bottom"><span class="disclaimer">محاكاة تعليمية وليست أشعة حقيقية أو فحصاً طبياً</span><span class="disclaimer">المعالجة محلياً دون إنترنت</span></div>
+    <div class="toast" id="toast"></div>
+    <div class="fact" id="fact"><strong id="factTitle"></strong><span id="factText"></span></div>
+    <div class="overlay" id="welcome"><h3>مرآتك التشريحية جاهزة</h3><p>اضغط بدء التجربة للسماح باستخدام الكاميرا. ضع وجهك ويدك أمام العدسة مع إضاءة جيدة. تتم معالجة الصورة محلياً داخل المتصفح.</p><button class="primary" id="start">▶ بدء التجربة وتشغيل الكاميرا</button><div id="message"></div></div>
+   </div>
+  </section>
+  <aside class="panel">
+   <h3>لوحة التحكم</h3>
+   <div class="group"><div class="group-title">طبقات الرأس</div><div class="toggle-grid">
+    <label class="toggle"><input type="checkbox" id="skull" checked> الجمجمة</label>
+    <label class="toggle"><input type="checkbox" id="brain" checked> الدماغ</label>
+    <label class="toggle"><input type="checkbox" id="eyes" checked> العينان</label>
+    <label class="toggle"><input type="checkbox" id="muscles" checked> العضلات</label>
+    <label class="toggle"><input type="checkbox" id="vessels"> الأوعية الدموية</label>
+    <label class="toggle"><input type="checkbox" id="outline" checked> محيط الرأس</label>
+    <label class="toggle"><input type="checkbox" id="jaw" checked> الفك والأسنان</label>
+    <label class="toggle"><input type="checkbox" id="eyeMuscles"> عضلات حركة العين</label>
+   </div></div>
+   <div class="group"><div class="group-title">طبقات اليد</div><div class="toggle-grid">
+    <label class="toggle"><input type="checkbox" id="bones" checked> عظام اليد</label>
+    <label class="toggle"><input type="checkbox" id="tendons"> الأوتار</label>
+    <label class="toggle"><input type="checkbox" id="handOutline"> محيط اليد</label>
+   </div></div>
+   <div class="group"><div class="group-title">طريقة العرض</div>
+    <select id="look"><option value="xray">الأشعة السينية — X-Ray</option><option value="color">النموذج التشريحي الملون</option></select>
+    <select id="reveal"><option value="full">عرض كامل</option><option value="lens">عدسة الأشعة تتبع السبابة</option></select>
+    <label class="toggle"><input type="checkbox" id="names" checked> إظهار الأسماء التشريحية</label>
+    <label class="toggle"><input type="checkbox" id="mirror" checked> صورة مرآة</label>
+    <label class="toggle"><input type="checkbox" id="vertical"> وضع عمودي 9:16</label>
+   </div>
+   <div class="group"><div class="group-title">ضبط النموذج</div>
+    <div class="range"><div class="range-head"><span>شفافية الكاميرا</span><output id="opacityVal">75%</output></div><input id="opacity" type="range" min="10" max="100" value="75"></div>
+    <div class="range"><div class="range-head"><span>حجم عدسة الأشعة</span><output id="lensVal">120</output></div><input id="lensSize" type="range" min="55" max="230" value="120"></div>
+    <div class="range"><div class="range-head"><span>حجم نموذج الرأس</span><output id="scaleVal">100%</output></div><input id="headScale" type="range" min="70" max="140" value="100"></div>
+    <div class="range"><div class="range-head"><span>رفع / خفض النموذج</span><output id="offsetVal">0</output></div><input id="headOffset" type="range" min="-60" max="60" value="0"></div>
+   </div>
+   <div class="group"><div class="group-title">إجراءات</div><div class="actions"><button class="secondary" id="reset">إعادة الضبط</button><button class="secondary" id="record">● تسجيل 10 ثوانٍ</button></div><p class="note">تلميح: اجعل وجهك واضحاً أمام الكاميرا، وقرّب يدك من مستوى الوجه لتجربة العدسة. قد يختلف تطابق الرسم باختلاف الكاميرا والإضاءة.</p></div>
+  </aside>
+ </div>
+ <div class="footer">هذا العمل محاكاة بصرية تعليمية مبنية على نقاط التتبع، ولا يصوّر الأعضاء الداخلية الحقيقية ولا يُستخدم للتشخيص الطبي.</div>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+const FONT="Tahoma,'Noto Naskh Arabic',Arial,sans-serif";
+const canvas=$('view'),ctx=canvas.getContext('2d'),video=document.createElement('video');
+video.autoplay=true;video.playsInline=true;video.muted=true;video.setAttribute('playsinline','');
+let faceLandmarker=null,handLandmarker=null,stream=null,active=false,wasActive=false,starting=false,loopRunning=false;
+let lastVideoTime=-1,frame=0,fps=0,fpsCount=0,fpsStart=performance.now();
+let face=null,hands=[],lastTip=null,steadySince=0,recording=false;
+let smoothFace=null,smoothHands=[],jawOpen=0,headYaw=0,headPitch=0;
+const W=()=>canvas.width,H=()=>canvas.height;
+const opts={skull:true,brain:true,eyes:true,muscles:true,vessels:false,outline:true,bones:true,tendons:false,handOutline:false,jaw:true,eyeMuscles:false};
+const ids=Object.keys(opts);ids.forEach(k=>$(k).addEventListener('change',()=>opts[k]=$(k).checked));
+const blend=(a,b,t)=>a+(b-a)*t;
+const D=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+const lerp2=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const isXray=()=>$('look').value==='xray';
+
+function setStatus(t,live=false){$('statusText').textContent=t;$('status').classList.toggle('live',live)}
+function msg(t){$('message').textContent=t}
+let toastTimer=0;
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>{e.style.display='none'},3800)}
+function showWelcome(t){$('welcome').style.display='flex';msg(t||'');$('start').disabled=false}
+function resize(){const r=$('stage').getBoundingClientRect(),d=Math.min(devicePixelRatio||1,1.6);canvas.width=Math.max(2,Math.round(r.width*d));canvas.height=Math.max(2,Math.round(r.height*d))}
+$('vertical').addEventListener('change',e=>{$('stage').style.aspectRatio=e.target.checked?'9 / 16':'16 / 9';$('stage').style.maxHeight=e.target.checked?'82vh':'75vh';resize()});
+new ResizeObserver(resize).observe($('stage'));resize();
+
+// Landmark (0..1 in the camera frame) -> canvas pixels, honouring object-fit:cover cropping and the mirror switch.
+function xy(p){const vw=video.videoWidth||1280,vh=video.videoHeight||720,sc=Math.max(W()/vw,H()/vh),dw=vw*sc,dh=vh*sc,ox=(dw-W())/2,oy=(dh-H())/2;let x=p.x*dw-ox,y=p.y*dh-oy;if($('mirror').checked)x=W()-x;return {x,y}}
+function smoothPoints(old,now,a=.38){if(!old||old.length!==now.length)return now;return now.map((p,i)=>({x:blend(old[i].x,p.x,a),y:blend(old[i].y,p.y,a),z:blend(old[i].z||0,p.z||0,a)}))}
+
+// ---- drawing helpers -------------------------------------------------------
+function line(points,color,width=2){if(points.length<2)return;ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()}
+function glowLine(points,color,width=2,blur=8){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=blur;line(points,color,width);ctx.restore()}
+function curve(a,b,c,color,width){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(c.x,c.y,b.x,b.y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.stroke()}
+function dot(p,r,color){ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
+function ell(x,y,rx,ry,rot,fill,stroke,lw=2){ctx.beginPath();ctx.ellipse(x,y,Math.max(.5,rx),Math.max(.5,ry),rot||0,0,Math.PI*2);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function rrect(x,y,w,h,r){if(ctx.roundRect){ctx.roundRect(x,y,w,h,r);return}r=Math.min(r,w/2,h/2);ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function label(text,pt,color='#b8f36b'){if(!$('names').checked)return;ctx.save();ctx.font=`700 ${Math.max(10,W()/95)}px ${FONT}`;ctx.textAlign='center';ctx.direction='rtl';ctx.lineWidth=3;ctx.strokeStyle='#061521';ctx.strokeText(text,pt.x,pt.y);ctx.fillStyle=color;ctx.fillText(text,pt.x,pt.y);ctx.restore()}
+
+// Teeth follow the inner-lip landmarks, so the gap between arches is the real mouth opening.
+const LIP_UP=[78,191,80,81,82,13,312,311,310,415,308],LIP_LO=[78,95,88,178,87,14,317,402,318,324,308];
+function teethRow(p,idx,dir,n,tw,th,fill,stroke){
+ const pts=idx.map(i=>p[i]),seg=[0];
+ for(let i=1;i<pts.length;i++)seg.push(seg[i-1]+D(pts[i-1],pts[i]));
+ const total=seg[seg.length-1];if(total<6)return;
+ for(let k=0;k<n;k++){
+  const d=(k+.5)/n*total;let j=1;while(j<seg.length-1&&seg[j]<d)j++;
+  const pos=lerp2(pts[j-1],pts[j],(d-seg[j-1])/Math.max(1e-6,seg[j]-seg[j-1]));
+  ctx.save();ctx.translate(pos.x,pos.y);ctx.rotate(Math.atan2(-dir.x,dir.y));
+  ctx.beginPath();rrect(-tw/2,0,tw,th,tw*.28);ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();ctx.restore();
+ }
+}
+
+// Six extraocular muscles per eye, drawn schematically (directions, not exact anatomy).
+function drawEyeMuscles(eyeC,corners,eyeW,col){
+ corners.forEach((cn,i)=>{
+  const g=eyeC[i],lat=(()=>{const dx=cn.outer.x-cn.inner.x,dy=cn.outer.y-cn.inner.y,l=Math.hypot(dx,dy)||1;return {x:dx/l,y:dy/l}})();
+  const med={x:-lat.x,y:-lat.y};
+  // down axis = perpendicular to the eye line, pointing towards the chin side of the screen
+  let ey={x:-lat.y,y:lat.x};if(ey.y<0)ey={x:-ey.x,y:-ey.y};
+  const R=eyeW*.36,A={x:g.x+med.x*eyeW*.62,y:g.y+med.y*eyeW*.62};
+  const at=(o,k)=>({x:g.x+o.x*k,y:g.y+o.y*k});
+  const up={x:-ey.x,y:-ey.y};
+  const rim=[at(up,R),at(ey,R),at(med,R),at(lat,R)];
+  const ctl=[{x:g.x+up.x*R*2.1+lat.x*R*.4,y:g.y+up.y*R*2.1+lat.y*R*.4},{x:g.x+ey.x*R*2.1+lat.x*R*.4,y:g.y+ey.y*R*2.1+lat.y*R*.4},null,{x:g.x+lat.x*R*2.0+ey.x*R*1.2,y:g.y+lat.y*R*2.0+ey.y*R*1.2}];
+  rim.forEach((q,k)=>{if(k===2)line([q,A],col,2.4);else curve(q,A,ctl[k],col,2.4);dot(q,2,col)});
+  const T={x:g.x+med.x*eyeW*.48+up.x*eyeW*.6,y:g.y+med.y*eyeW*.48+up.y*eyeW*.6};     // trochlea (superior oblique)
+  glowLine([A,T,{x:g.x+up.x*R*.85+lat.x*R*.55,y:g.y+up.y*R*.85+lat.y*R*.55}],col,1.6,0);
+  const F={x:g.x+med.x*eyeW*.48+ey.x*eyeW*.55,y:g.y+med.y*eyeW*.48+ey.y*eyeW*.55};   // floor origin (inferior oblique)
+  line([F,{x:g.x+ey.x*R*.8+lat.x*R*.6,y:g.y+ey.y*R*.8+lat.y*R*.6}],col,1.6);
+  dot(A,2.5,col);
+ });
+}
+
+function drawHead(){
+ if(!face)return;
+ const XR=isXray(),p=face.map(xy),s=Number($('headScale').value)/100;
+ const w=D(p[234],p[454]),h=D(p[10],p[152]);
+ if(w<8||h<8)return;
+ // Face axes measured on screen. Roll comes from the forehead->chin axis, so it is already correct when mirrored.
+ const ux=(p[10].x-p[152].x)/h,uy=(p[10].y-p[152].y)/h;
+ const roll=Math.atan2(ux,-uy),cR=Math.cos(roll),sR=Math.sin(roll),dn={x:-ux,y:-uy};
+ const c={x:(p[234].x+p[454].x+p[10].x+p[152].x)/4,y:(p[234].y+p[454].y+p[10].y+p[152].y)/4};
+ const rx=w/2,ry=h/2,off=Number($('headOffset').value)*H()/720;
+ const cheek=mid(p[234],p[454]),eyeMid=mid(p[33],p[263]);
+ // Yaw/pitch shifts of the generic cranium come from landmarks (sign-correct in mirror mode);
+ // the 4x4 transform matrix only foreshortens it (|cos| is sign-agnostic).
+ const yn=clamp(((p[1].x-cheek.x)*cR+(p[1].y-cheek.y)*sR)/rx,-1,1);
+ const proj=a=>a.x*dn.x+a.y*dn.y;
+ const ratio=(proj(p[1])-proj(eyeMid))/Math.max(1,proj(p[152])-proj(eyeMid));
+ const shiftX=yn*rx*.22,shiftY=clamp(ratio-.62,-.25,.25)*ry*.9;
+ const kx=s*Math.max(.62,Math.abs(Math.cos(headYaw))),ky=s*Math.max(.8,Math.abs(Math.cos(headPitch))),U=1/((kx+ky)/2);
+ const toS=(lx,ly)=>{const X=(lx+shiftX)*kx,Y=(ly+shiftY)*ky;return {x:c.x+X*cR-Y*sR,y:c.y+off+X*sR+Y*cR}};
+ const rs=rx*s;
+
+ // 1) Generic cranium + brain live in a head-local frame (rotated, foreshortened, scaled).
+ ctx.save();ctx.translate(c.x,c.y+off);ctx.rotate(roll);ctx.scale(kx,ky);ctx.translate(shiftX,shiftY);
+ if(opts.outline){ctx.save();ctx.setLineDash([5*U,5*U]);ell(0,0,rx*1.22,ry*1.2,0,null,'#8ceaf4aa',1.5*U);ctx.restore()}
+ if(opts.skull){
+  ctx.save();ctx.shadowColor='#baf6ff';ctx.shadowBlur=14;
+  ell(0,-ry*.34,rx*1.12,ry*.80,0,XR?'#a9edff16':'#e8d5ad24',XR?'#e5fbff':'#e9d4ad',2.2*U);ctx.restore();
+  const sc='#c6f6ff99';
+  line([{x:-rx*.98,y:-ry*.28},{x:-rx*.72,y:-ry*.74},{x:0,y:-ry*.88},{x:rx*.72,y:-ry*.74},{x:rx*.98,y:-ry*.28}],sc,1*U);   // coronal suture
+  line([{x:0,y:-ry*1.13},{x:0,y:-ry*.88}],sc,1*U);                                                                        // sagittal suture
+ }
+ if(opts.brain){
+  const cols=XR?['#b9f4ff42','#a9dfff36','#d4c6ff35','#8dd8ff35']:['#f1a5a5a0','#f4bd83a0','#b89ce9a0','#84c7d9a0'],eb=XR?'#bcefff':'#e7d0cf';
+  ell(-rx*.48,-ry*.62,rx*.5,ry*.40,0,cols[0],eb,1.2*U);ell(rx*.48,-ry*.62,rx*.5,ry*.40,0,cols[2],eb,1.2*U);
+  ell(0,-ry*.22,rx*.3,ry*.1,0,cols[3],eb,1.2*U);
+  line([{x:0,y:-ry*1.02},{x:0,y:-ry*.28}],eb,1*U);
+  [-1,1].forEach(sg=>{for(let k=0;k<3;k++){const y=-ry*(.84-k*.18);curve({x:sg*rx*.12,y:y},{x:sg*rx*.84,y:y+ry*.04},{x:sg*rx*.48,y:y-ry*.1},eb,.9*U)}});
+ }
+ ctx.restore();
+ if(opts.skull)label('الجمجمة · Skull',toS(0,-ry*1.24));
+ if(opts.brain)label('الدماغ · Brain',toS(0,-ry*.62));
+
+ // 2) Landmark-driven layers are drawn directly in screen space so they stay glued to the face.
+ const eyeC=[mid(p[33],p[133]),mid(p[362],p[263])],iris=p.length>473?[p[468],p[473]]:eyeC;
+ const eyeW=(D(p[33],p[133])+D(p[362],p[263]))/2;
+ if(opts.jaw){
+  const outer=[p[234],p[172],p[136],p[150],p[152],p[379],p[365],p[397],p[454]],anchor=p[14];
+  const inner=outer.map(q=>lerp2(q,anchor,.13));
+  ctx.beginPath();ctx.moveTo(outer[0].x,outer[0].y);outer.forEach(q=>ctx.lineTo(q.x,q.y));for(let i=inner.length-1;i>=0;i--)ctx.lineTo(inner[i].x,inner[i].y);ctx.closePath();
+  ctx.fillStyle=XR?'#e8fbff22':'#d9c49e55';ctx.fill();
+  glowLine(outer,XR?'#e8fbff':'#d9c49e',Math.max(2,rs*.02),7);
+  [lerp2(p[234],p[127],.7),lerp2(p[454],p[356],.7)].forEach(q=>ell(q.x,q.y,rs*.045,rs*.045,0,XR?'#e8fbffaa':'#d9c49ecc',null));   // jaw joint
+  label('الفك السفلي · Mandible'+(jawOpen>.05?` ${Math.round(jawOpen*100)}%`:''),{x:p[152].x,y:p[152].y+ry*.2});
+ }
+ if(opts.muscles){
+  const col=XR?'#ff9caa':'#ef7f78';
+  [[33,133],[362,263]].forEach(([a,b],i)=>{const e=eyeC[i];ell(e.x,e.y,eyeW*.78,eyeW*.5,roll,null,col,2)});
+  line([p[70],p[105],p[107],p[9]],col,3);line([p[300],p[334],p[336],p[9]],col,3);
+  line([p[50],p[205],p[425],p[280]],col,2.5);
+  line([p[127],p[234],p[172]],col,3);line([p[356],p[454],p[397]],col,3);
+  {const ox=p[454].x-cheek.x,oy=p[454].y-cheek.y,ol=Math.hypot(ox,oy)||1;label('عضلات الوجه · Facial muscles',{x:p[454].x+ox/ol*rs*.42,y:p[454].y+oy/ol*rs*.42+ry*.12},col)}
+ }
+ if(opts.vessels){
+  const col='#ff536d';glowLine([p[127],p[234],p[93],p[10]],col,2,6);glowLine([p[356],p[454],p[323],p[10]],col,2,6);
+  glowLine([p[10],p[9],p[8],p[1]],'#ff7c85',1.5,5);{const q=lerp2(p[10],p[234],.72);label('أوعية دموية · Vessels',{x:q.x,y:q.y-ry*.08},col)};
+ }
+ if(opts.eyes){
+  eyeC.forEach((e,i)=>{ell(e.x,e.y,eyeW*.95,eyeW*.72,roll,'#e9fbff18',XR?'#e8fdff':'#80d9ed',2);ell(e.x,e.y,eyeW*.36,eyeW*.36,0,'#e9fbff30',XR?'#e8fdff':'#80d9ed',1.2);dot(iris[i],Math.max(3,eyeW*.13),'#dffaff')});
+  label(opts.eyeMuscles?'العضلات المحركة للعين (6)':'محجرا العينين · Orbits',{x:eyeMid.x,y:eyeMid.y-eyeW*1.0},opts.eyeMuscles?'#ffc0c8':undefined);
+ }
+ if(opts.eyeMuscles){
+  drawEyeMuscles(eyeC,[{inner:p[133],outer:p[33]},{inner:p[362],outer:p[263]}],eyeW,XR?'#ffb0bc':'#e77f78');
+ }
+ if(opts.jaw){
+  // Nasal aperture + both dental arches (10 schematic teeth each) along the inner lips.
+  const nose={x:p[1].x+ux*h*.06,y:p[1].y+uy*h*.06};
+  ell(nose.x,nose.y,rs*.12,ry*s*.17,roll,null,'#e6fbff',1.5);
+  const mw=D(p[78],p[308]),n=10,tw=mw/n*.88,th=clamp(h*.05,3,40);
+  teethRow(p,LIP_UP,dn,n,tw,th,XR?'#f4ffffcc':'#fff3d8','#e9ffff');
+  teethRow(p,LIP_LO,{x:-dn.x,y:-dn.y},n,tw*.92,th*.92,XR?'#e8fbffaa':'#f5e5c4','#e9ffff');
+  label('الأسنان · Teeth',{x:p[13].x,y:p[13].y-th-ry*.07});
+ }
+ dot(p[33],2.5,'#b8f36b');dot(p[263],2.5,'#b8f36b');dot(p[1],2.5,'#71e7f5');dot(p[152],2.5,'#71e7f5');
+}
+
+// ---- hand: 8 carpals + 5 metacarpals + 14 phalanges = 27 ---------------------
+function bone(a,b,r,color){const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(len<1)return;ctx.save();ctx.translate(a.x,a.y);ctx.rotate(Math.atan2(dy,dx));ctx.beginPath();rrect(-r*.45,-r/2,len+r*.9,r,r/2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle=isXray()?'#e7fcff':'#fff0d5';ctx.lineWidth=1;ctx.stroke();ctx.restore();dot(a,r*.55,color);dot(b,r*.55,color)}
+const HAND_CHAINS=[[0,1,2,3,4],[0,5,6,7,8],[0,9,10,11,12],[0,13,14,15,16],[0,17,18,19,20]];
+function drawHand(pts){
+ const p=pts.map(xy),L=Math.max(3,D(p[0],p[9])),r=L*.085,XR=isXray();
+ if(opts.handOutline){for(const ch of HAND_CHAINS)line(ch.map(i=>p[i]),'#9beaf2aa',1.5)}
+ if(opts.bones){
+  const col=XR?'#e5fbff':'#e9d8b6',u={x:(p[9].x-p[0].x)/L,y:(p[9].y-p[0].y)/L};
+  const pw=D(p[5],p[17])||1,v={x:(p[17].x-p[5].x)/pw,y:(p[17].y-p[5].y)/pw},va=Math.atan2(v.y,v.x);
+  // 8 carpals: two rows of four between the wrist and the metacarpal bases
+  [{t:.09,o:[-.3,-.1,.1,.3]},{t:.23,o:[-.34,-.12,.12,.34]}].forEach(row=>row.o.forEach(o=>{ell(p[0].x+u.x*L*row.t+v.x*pw*o,p[0].y+u.y*L*row.t+v.y*pw*o,r*.78,r*.6,va,col,'#e7fcff',.8)}));
+  // 5 metacarpals (thumb metacarpal runs CMC(1)->MCP(2); others start in the distal carpal row)
+  bone(p[1],p[2],r*1.1,col);[5,9,13,17].forEach(i=>bone(lerp2(p[0],p[i],.28),p[i],r*1.1,col));
+  // 14 phalanges: thumb 2 + four fingers x 3
+  bone(p[2],p[3],r*.9,col);bone(p[3],p[4],r*.8,col);
+  [[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]].forEach(f=>{for(let k=0;k<3;k++)bone(p[f[k]],p[f[k+1]],r*.8,col)});
+  label('عظام اليد · 27 عظمة',{x:p[0].x-u.x*L*.3,y:p[0].y-u.y*L*.3});
+ }
+ if(opts.tendons){for(const ch of HAND_CHAINS.slice(1)){glowLine(ch.map(i=>p[i]),'#f4c66c',Math.max(1,r*.25),5)}}
+ if(opts.bones||opts.handOutline)dot(p[8],r*.7,'#b8f36b');
+}
+
+function drawScene(){
+ const cw=W(),ch=H();ctx.clearRect(0,0,cw,ch);
+ if(video.readyState>=2){ctx.save();ctx.globalAlpha=Number($('opacity').value)/100;const vw=video.videoWidth||1280,vh=video.videoHeight||720,sc=Math.max(cw/vw,ch/vh),dw=vw*sc,dh=vh*sc,ox=(dw-cw)/2,oy=(dh-ch)/2;if($('mirror').checked){ctx.translate(cw,0);ctx.scale(-1,1)}ctx.drawImage(video,-ox,-oy,dw,dh);ctx.restore()}
+ const paint=()=>{if(face)drawHead();hands.forEach(h=>drawHand(h))};
+ if($('reveal').value==='lens'){
+  if(lastTip){
+   const rad=Number($('lensSize').value)*Math.min(cw/1280,ch/720);
+   ctx.save();ctx.beginPath();ctx.arc(lastTip.x,lastTip.y,rad,0,Math.PI*2);ctx.clip();paint();ctx.restore();
+   ctx.save();ctx.beginPath();ctx.arc(lastTip.x,lastTip.y,rad,0,Math.PI*2);ctx.strokeStyle='#a9f5ff';ctx.lineWidth=3;ctx.shadowColor='#6defff';ctx.shadowBlur=17;ctx.stroke();ctx.restore();
+  }else{
+   ctx.save();ctx.font=`700 ${Math.max(12,cw/70)}px ${FONT}`;ctx.textAlign='center';ctx.direction='rtl';ctx.fillStyle='#d8f6ff';ctx.shadowColor='#000';ctx.shadowBlur=6;
+   ctx.fillText('ارفع يدك وأشِر بالسبابة لتظهر عدسة الأشعة',cw/2,ch*.5);ctx.restore();
+  }
+ }else paint();
+}
+
+function pointing(tip){
+ if(!tip){lastTip=null;steadySince=0;$('fact').style.display='none';return}
+ const key=Math.round(tip.x/18)+','+Math.round(tip.y/18);
+ if(!(lastTip&&lastTip.key===key)||!steadySince)steadySince=performance.now();
+ lastTip={...tip,key};
+ if(performance.now()-steadySince>650){
+  $('factTitle').textContent='عظام اليد — Hand bones';
+  $('factText').textContent='تتكون اليد من 27 عظمة: 8 عظام رسغ، و5 عظام مشط، و14 سلامية.';
+  $('fact').style.display='block';
+ }else $('fact').style.display='none';
+}
+
+// ---- camera / models / loop --------------------------------------------------
+async function startCamera(){
+ if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('INSECURE_CONTEXT');
+ stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}});
+ video.srcObject=stream;await video.play();
+}
+function stopStream(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null}
+async function ensureModels(){
+ if(faceLandmarker&&handLandmarker)return;
+ const {FilesetResolver,FaceLandmarker,HandLandmarker}=await import('./libs/mediapipe/vision_bundle.mjs');
+ const vision=await FilesetResolver.forVisionTasks(new URL('./libs/mediapipe/wasm',location.href).href);
+ const faceModel=new URL('./models/face_landmarker.task',location.href).href,handModel=new URL('./models/hand_landmarker.task',location.href).href;
+ async function create(delegate){
+  let f=null;
+  try{
+   f=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:faceModel,delegate},runningMode:'VIDEO',numFaces:1,outputFaceBlendshapes:true,outputFacialTransformationMatrixes:true,minFaceDetectionConfidence:.5,minFacePresenceConfidence:.5,minTrackingConfidence:.5});
+   const hd=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:handModel,delegate},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.6,minHandPresenceConfidence:.6,minTrackingConfidence:.5});
+   return [f,hd];
+  }catch(e){try{f&&f.close()}catch(_){}throw e}
+ }
+ try{[faceLandmarker,handLandmarker]=await create('GPU')}catch(e){console.warn('GPU delegate failed, using CPU',e);[faceLandmarker,handLandmarker]=await create('CPU')}
+}
+function explain(e){
+ const m=String((e&&e.message)||e||'');
+ if(m==='INSECURE_CONTEXT')return 'تعذر الوصول إلى الكاميرا داخل التطبيق. أعد تشغيل التطبيق وحاول مجدداً.';
+ if(e&&(e.name==='NotAllowedError'||e.name==='PermissionDeniedError'))return 'لم يُمنح إذن الكاميرا. افتح إعدادات أندرويد ← التطبيقات ← مرآة الأشعة السينية ← الأذونات ← الكاميرا، ثم أعد المحاولة.';
+ if(e&&(e.name==='NotFoundError'||e.name==='DevicesNotFoundError'))return 'لم يتم العثور على كاميرا متاحة على هذا الجهاز.';
+ if(e&&(e.name==='NotReadableError'||e.name==='TrackStartError'))return 'الكاميرا مشغولة بتطبيق آخر أو تعذر تشغيلها. أغلق التطبيقات التي تستخدمها ثم أعد المحاولة.';
+ if(/fetch|network|import|module|404|wasm|load/i.test(m))return 'تعذر تحميل ملفات التتبع المحلية. أعد تثبيت نسخة APK مبنية بنجاح من GitHub Actions (يجب أن تتضمن المكتبة والنماذج).';
+ return 'حدث خطأ أثناء تشغيل التطبيق: '+m;
+}
+function startLoop(){if(loopRunning)return;loopRunning=true;requestAnimationFrame(loop)}
+async function init(){
+ if(starting)return;starting=true;$('start').disabled=true;
+ msg('سيطلب أندرويد الآن إذن استخدام الكاميرا. اختر «أثناء استخدام التطبيق».');setStatus('بانتظار إذن الكاميرا');
+ try{
+  await startCamera();
+  msg('تم السماح بالكاميرا. جارٍ تحميل نماذج تتبع الوجه واليدين…');setStatus('جارٍ تحميل النماذج',true);
+  await ensureModels();
+  active=true;wasActive=false;$('welcome').style.display='none';setStatus('التتبع يعمل',true);startLoop();
+ }catch(e){
+  console.error(e);stopStream();setStatus('تعذر التشغيل');showWelcome(explain(e));
+ }finally{starting=false}
+}
+function loop(now=performance.now()){
+ if(!active){loopRunning=false;return}
+ try{
+  if(video.currentTime!==lastVideoTime&&video.readyState>=2){
+   lastVideoTime=video.currentTime;frame++;
+   // Alternate detectors to reduce CPU/GPU load while retaining responsive tracking
+   if(frame%2===0&&faceLandmarker){
+    const r=faceLandmarker.detectForVideo(video,now),raw=r.faceLandmarks&&r.faceLandmarks[0];
+    if(raw){
+     smoothFace=smoothPoints(smoothFace,raw,.42);face=smoothFace;
+     const m=r.facialTransformationMatrixes&&r.facialTransformationMatrixes[0],d=m&&m.data;
+     if(d&&d.length>=16){headYaw=Math.atan2(d[8],d[10]);headPitch=Math.atan2(-d[9],Math.hypot(d[8],d[10]))}
+     const cats=(r.faceBlendshapes&&r.faceBlendshapes[0]&&r.faceBlendshapes[0].categories)||[],jw=cats.find(x=>x.categoryName==='jawOpen');
+     jawOpen=jw?blend(jawOpen,jw.score,.45):jawOpen*.8;
+    }else{face=null;smoothFace=null;jawOpen=0}
+   }
+   if(frame%2===1&&handLandmarker){
+    const r=handLandmarker.detectForVideo(video,now),raw=r.landmarks||[];
+    smoothHands=raw.map((hd,i)=>smoothPoints(smoothHands[i],hd,.48));hands=smoothHands;
+   }
+   const hand=hands.find(hd=>hd&&hd[8]);pointing(hand?xy(hand[8]):null);
+   const t=performance.now();fpsCount++;if(t-fpsStart>=1000){fps=Math.round(fpsCount*1000/(t-fpsStart));fpsCount=0;fpsStart=t;$('fps').textContent=fps+' FPS'}
+   $('tracking').textContent=`الوجه: ${face?'متصل':'—'} | اليدان: ${hands.length||'—'}${face?` | الفك: ${Math.round(jawOpen*100)}%`:''}`;
+  }
+  drawScene();
+ }catch(e){console.error('frame error',e)}
+ requestAnimationFrame(loop);
+}
+
+// Pause/resume: the Android activity also calls these (window.__xrayPause / __xrayResume).
+function pauseCamera(){
+ if(active)wasActive=true;active=false;stopStream();
+ face=null;smoothFace=null;hands=[];smoothHands=[];lastTip=null;jawOpen=0;lastVideoTime=-1;
+ if(wasActive)setStatus('متوقف مؤقتاً');
+}
+async function resumeCamera(){
+ if(!wasActive||active||starting)return;starting=true;
+ try{await startCamera();active=true;wasActive=false;setStatus('التتبع يعمل',true);startLoop()}
+ catch(e){console.error(e);wasActive=false;stopStream();setStatus('تعذر التشغيل');showWelcome('توقفت الكاميرا أثناء مغادرة التطبيق. اضغط للمتابعة.')}
+ finally{starting=false}
+}
+window.__xrayPause=pauseCamera;window.__xrayResume=resumeCamera;
+document.addEventListener('visibilitychange',()=>{document.hidden?pauseCamera():resumeCamera()});
+window.addEventListener('beforeunload',()=>stopStream());
+
+$('start').addEventListener('click',init);
+$('opacity').addEventListener('input',e=>$('opacityVal').textContent=e.target.value+'%');
+$('lensSize').addEventListener('input',e=>$('lensVal').textContent=e.target.value);
+$('headScale').addEventListener('input',e=>$('scaleVal').textContent=e.target.value+'%');
+$('headOffset').addEventListener('input',e=>$('offsetVal').textContent=e.target.value);
+$('reset').addEventListener('click',()=>{Object.entries({opacity:75,lensSize:120,headScale:100,headOffset:0}).forEach(([k,v])=>{$(k).value=v;$(k).dispatchEvent(new Event('input'))});ids.forEach(k=>{$(k).checked=['skull','brain','eyes','muscles','outline','bones','jaw'].includes(k);opts[k]=$(k).checked});$('look').value='xray';$('reveal').value='full';$('names').checked=true});
+
+// ---- recording (10 s of the canvas) -------------------------------------------
+function saveRecording(blob,ext){
+ const name='xray-mirror-'+new Date().toISOString().replace(/[:.]/g,'-')+'.'+ext;
+ if(window.AndroidBridge&&typeof window.AndroidBridge.saveVideo==='function'){
+  // WebView cannot download blob: URLs, so the bytes go to native code which saves them to Movies/XRayMirror.
+  const fr=new FileReader();
+  fr.onloadend=()=>{const b64=String(fr.result||'').split(',')[1]||'';
+   let ok=false;try{ok=window.AndroidBridge.saveVideo(b64,name,blob.type||'video/webm')}catch(e){console.error(e)}
+   toast(ok?'تم حفظ الفيديو في مجلد Movies/XRayMirror':'تعذر حفظ الفيديو على الجهاز')};
+  fr.onerror=()=>toast('تعذر قراءة التسجيل');
+  fr.readAsDataURL(blob);return;
+ }
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+$('record').addEventListener('click',()=>{
+ if(!active){toast('شغّل الكاميرا أولاً قبل التسجيل.');return}
+ if(recording)return;
+ const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t));
+ if(!mime||!canvas.captureStream){toast('التسجيل غير مدعوم على هذا الجهاز.');return}
+ try{
+  recording=true;const rec=new MediaRecorder(canvas.captureStream(30),{mimeType:mime}),chunks=[];let left=10;
+  const tick=setInterval(()=>{left--;$('record').textContent=`● جارٍ التسجيل… ${Math.max(left,0)}`},1000);$('record').textContent='● جارٍ التسجيل… 10';
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{clearInterval(tick);recording=false;$('record').textContent='● تسجيل 10 ثوانٍ';if(chunks.length)saveRecording(new Blob(chunks,{type:mime.split(';')[0]}),mime.startsWith('video/mp4')?'mp4':'webm');else toast('التسجيل فارغ.')};
+  rec.onerror=()=>{clearInterval(tick);recording=false;$('record').textContent='● تسجيل 10 ثوانٍ';toast('حدث خطأ أثناء التسجيل.')};
+  rec.start(1000);setTimeout(()=>{if(rec.state!=='inactive')rec.stop()},10000);
+ }catch(e){console.error(e);recording=false;$('record').textContent='● تسجيل 10 ثوانٍ';toast('تعذر التسجيل في هذا الجهاز.')}
+});
+</script>
+</body>
+</html>
