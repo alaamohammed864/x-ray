@@ -1,3 +1,4 @@
+
 name: Build X-Ray Mirror APK
 
 on:
@@ -7,9 +8,15 @@ on:
 
 env:
   MEDIAPIPE_VERSION: "0.10.14"
-  # عدّل هذا المسار ليطابق ما تستدعيه index.html
-  VENDOR_DIR: app/src/main/assets/mediapipe
+
+  # المسار الذي يستدعي منه index.html مكتبة MediaPipe
+  MEDIAPIPE_DIR: app/src/main/assets/www/libs/mediapipe
+
+  # المسار الذي يستدعي منه index.html نماذج الوجه واليد
+  MODELS_DIR: app/src/main/assets/www/models
+
   FACE_MODEL_URL: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+
   HAND_MODEL_URL: https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
 
 jobs:
@@ -17,60 +24,189 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. تنزيل ملفات المستودع
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2. إعداد Java
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
+      # 3. إعداد Android SDK دون setup-android@v3
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK packages
+        shell: bash
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          set -e
 
+          if [ -z "$ANDROID_HOME" ]; then
+            echo "::error::ANDROID_HOME is not configured"
+            exit 1
+          fi
+
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" \
+            -type f -name sdkmanager -print -quit)
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager was not found"
+            exit 1
+          fi
+
+          echo "Using SDK manager: $SDKMANAGER"
+
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+
+          "$SDKMANAGER" --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
+      # 4. تنزيل مكتبة MediaPipe
       - name: Download MediaPipe Tasks Vision
+        shell: bash
         run: |
-          mkdir -p "$VENDOR_DIR/wasm" "$VENDOR_DIR/models" /tmp/mp
+          set -e
+
+          mkdir -p \
+            "$MEDIAPIPE_DIR/wasm" \
+            "$MODELS_DIR" \
+            /tmp/mp
+
           cd /tmp/mp
+
           npm pack "@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}"
+
           tar -xzf mediapipe-tasks-vision-*.tgz
-          cd "$GITHUB_WORKSPACE"
-          cp /tmp/mp/package/vision_bundle.mjs "$VENDOR_DIR/"
-          cp /tmp/mp/package/wasm/* "$VENDOR_DIR/wasm/"
 
+          cp package/vision_bundle.mjs \
+            "$GITHUB_WORKSPACE/$MEDIAPIPE_DIR/"
+
+          cp package/wasm/* \
+            "$GITHUB_WORKSPACE/$MEDIAPIPE_DIR/wasm/"
+
+      # 5. تنزيل نماذج الوجه واليد
       - name: Download face and hand models
+        shell: bash
         run: |
-          curl -fL --retry 3 -o "$VENDOR_DIR/models/face_landmarker.task" "$FACE_MODEL_URL"
-          curl -fL --retry 3 -o "$VENDOR_DIR/models/hand_landmarker.task" "$HAND_MODEL_URL"
+          set -e
 
+          mkdir -p "$MODELS_DIR"
+
+          curl -fL --retry 3 \
+            -o "$MODELS_DIR/face_landmarker.task" \
+            "$FACE_MODEL_URL"
+
+          curl -fL --retry 3 \
+            -o "$MODELS_DIR/hand_landmarker.task" \
+            "$HAND_MODEL_URL"
+
+      # 6. التحقق من تطابق الملفات مع التطبيق
       - name: Verify bundled files
+        shell: bash
         run: |
-          for f in face_landmarker.task hand_landmarker.task; do
-            size=$(stat -c%s "$VENDOR_DIR/models/$f")
-            echo "$f: $size bytes"
-            [ "$size" -gt 1000000 ] || { echo "::error::$f is smaller than 1MB"; exit 1; }
-          done
-          ls "$VENDOR_DIR"/wasm/*.wasm > /dev/null || { echo "::error::WASM files missing"; exit 1; }
-          if grep -rEn "(src|href)=[\"']https?://" app/src/main/assets/index.html; then
-            echo "::error::External link found in index.html"; exit 1
-          fi
-          if grep -rn "android.permission.INTERNET" app/src/main/AndroidManifest.xml; then
-            echo "::error::INTERNET permission must not be requested"; exit 1
+          set -e
+
+          HTML_FILE="app/src/main/assets/www/index.html"
+          MANIFEST="app/src/main/AndroidManifest.xml"
+
+          if [ ! -f "$HTML_FILE" ]; then
+            echo "::error::index.html not found"
+            exit 1
           fi
 
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error::AndroidManifest.xml not found"
+            exit 1
+          fi
+
+          # التحقق من مكتبة MediaPipe
+          test -s "$MEDIAPIPE_DIR/vision_bundle.mjs" || {
+            echo "::error::vision_bundle.mjs missing"
+            exit 1
+          }
+
+          # التحقق من ملفات WASM
+          WASM_COUNT=$(find "$MEDIAPIPE_DIR/wasm" \
+            -type f -name "*.wasm" | wc -l)
+
+          if [ "$WASM_COUNT" -eq 0 ]; then
+            echo "::error::WASM files missing"
+            exit 1
+          fi
+
+          echo "WASM files: $WASM_COUNT"
+
+          # التحقق من نماذج الوجه واليد
+          for f in face_landmarker.task hand_landmarker.task; do
+            FILE="$MODELS_DIR/$f"
+
+            if [ ! -s "$FILE" ]; then
+              echo "::error::$f missing"
+              exit 1
+            fi
+
+            SIZE=$(stat -c%s "$FILE")
+
+            echo "$f: $SIZE bytes"
+
+            if [ "$SIZE" -le 1000000 ]; then
+              echo "::error::$f is smaller than 1MB"
+              exit 1
+            fi
+          done
+
+          # التحقق من المسارات المستخدمة في HTML
+          grep -Fq "./libs/mediapipe/vision_bundle.mjs" "$HTML_FILE" || {
+            echo "::error::MediaPipe library path mismatch"
+            exit 1
+          }
+
+          grep -Fq "./libs/mediapipe/wasm" "$HTML_FILE" || {
+            echo "::error::WASM path mismatch"
+            exit 1
+          }
+
+          grep -Fq "./models/face_landmarker.task" "$HTML_FILE" || {
+            echo "::error::Face model path mismatch"
+            exit 1
+          }
+
+          grep -Fq "./models/hand_landmarker.task" "$HTML_FILE" || {
+            echo "::error::Hand model path mismatch"
+            exit 1
+          }
+
+          # منع الروابط الخارجية المباشرة في HTML
+          if grep -En "(src|href)=[\"']https?://" "$HTML_FILE"; then
+            echo "::error::External URL found in index.html"
+            exit 1
+          fi
+
+          # التحقق من عدم طلب صلاحية الإنترنت
+          if grep -n "android.permission.INTERNET" "$MANIFEST"; then
+            echo "::error::INTERNET permission found"
+            exit 1
+          fi
+
+          echo "All bundled files verified successfully."
+
+      # 7. إعداد Gradle
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
+      # 8. بناء التطبيق
       - name: Build debug APK
+        shell: bash
         run: |
+          set -e
+
           if [ -f gradlew ]; then
             chmod +x gradlew
             ./gradlew assembleDebug --no-daemon
@@ -78,17 +214,46 @@ jobs:
             gradle assembleDebug --no-daemon
           fi
 
+      # 9. التحقق من وجود الملفات داخل APK
       - name: Verify assets inside APK
+        shell: bash
         run: |
-          APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -n1)
-          echo "APK: $APK"
-          unzip -l "$APK" | grep -q "face_landmarker.task" || { echo "::error::face model not in APK"; exit 1; }
-          unzip -l "$APK" | grep -q "hand_landmarker.task" || { echo "::error::hand model not in APK"; exit 1; }
-          unzip -l "$APK" | grep -q "\.wasm" || { echo "::error::WASM not in APK"; exit 1; }
+          set -e
 
+          APK=$(find app/build/outputs/apk/debug \
+            -type f -name "*.apk" -print -quit)
+
+          if [ -z "$APK" ]; then
+            echo "::error::APK file not found"
+            exit 1
+          fi
+
+          echo "APK: $APK"
+
+          unzip -l "$APK" > /tmp/apk_contents.txt
+
+          for f in \
+            face_landmarker.task \
+            hand_landmarker.task \
+            vision_bundle.mjs
+          do
+            if ! grep -q "$f" /tmp/apk_contents.txt; then
+              echo "::error::$f not found inside APK"
+              exit 1
+            fi
+          done
+
+          if ! grep -q "\.wasm" /tmp/apk_contents.txt; then
+            echo "::error::WASM files not found inside APK"
+            exit 1
+          fi
+
+          echo "APK assets verified successfully."
+
+      # 10. رفع ملف APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: XRayMirror-Android-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
